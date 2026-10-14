@@ -56,12 +56,24 @@ def extract_text(path):
 
 
 def chunk_text(text, chunk_size=CHUNK_SIZE, overlap=OVERLAP):
-    """Overlapping character chunks; overlap keeps sentences that cross a boundary findable."""
-    text = text.strip()
+    """Overlapping chunks of about `chunk_size` characters; overlap keeps sentences
+    that cross a boundary findable. Cuts land on whitespace, so no word is split
+    in half (a half-word embeds badly and reads badly as a source)."""
+    text = " ".join(text.split())
     chunks, start = [], 0
     while start < len(text):
-        piece = text[start:start + chunk_size].strip()
+        end = min(start + chunk_size, len(text))
+        if end < len(text):
+            space = text.rfind(" ", start + chunk_size // 2, end)
+            if space != -1:
+                end = space
+        piece = text[start:end].strip()
         if piece:
             chunks.append(piece)
-        start += chunk_size - overlap
+        if end >= len(text):
+            break
+        # step back by `overlap`, then forward to a word start
+        start = max(end - overlap, start + 1)
+        while 0 < start < end and text[start - 1] != " ":
+            start += 1
     return chunks

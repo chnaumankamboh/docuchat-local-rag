@@ -1,31 +1,50 @@
+import json
 import os
 import re
 import threading
+import urllib.error
+import urllib.request
 
 import documents  # noqa: F401 - first, so the models folder is set before transformers loads
-import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
 from retrieve import retrieve_docs
 
 # Disable Hugging Face symlink warning (Windows compatibility fix)
 os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
 
-# Load lightweight chat model (TinyLlama)
-model_name = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
+# Which model writes the answers (retrieval is the same either way):
+#   "tinyllama" (default): TinyLlama-1.1B-Chat through Transformers. Self-contained,
+#                runs anywhere, but small enough to misread its context sometimes.
+#   "ollama":    any chat model served by a local Ollama, e.g. llama3.2:3b. Far more
+#                faithful to the retrieved text; needs Ollama installed and running.
+# Choose with:  set DOCUCHAT_LLM=ollama   (and optionally DOCUCHAT_OLLAMA_MODEL)
+LLM_BACKEND = os.environ.get("DOCUCHAT_LLM", "tinyllama").strip().lower()
+OLLAMA_MODEL = os.environ.get("DOCUCHAT_OLLAMA_MODEL", "llama3.2:3b")
+OLLAMA_URL = os.environ.get("OLLAMA_HOST", "http://localhost:11434").rstrip("/") + "/api/chat"
 
-# Automatically detect GPU (CUDA) or fallback to CPU
-device = "cuda" if torch.cuda.is_available() else "cpu"
-print(f"Using device: {device}")
+if LLM_BACKEND == "tinyllama":
+    import torch
+    from transformers import AutoTokenizer, AutoModelForCausalLM
 
-# Load model with optimized precision based on hardware
-model = AutoModelForCausalLM.from_pretrained(
-    model_name,
-    dtype=torch.float16 if device == "cuda" else torch.float32,
-    low_cpu_mem_usage=True
-)
-# Move model to selected device (GPU/CPU)
-model = model.to(device)
+    # Load lightweight chat model (TinyLlama)
+    model_name = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+
+    # Automatically detect GPU (CUDA) or fallback to CPU
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"Using TinyLlama on {device}")
+
+    # Load model with optimized precision based on hardware
+    model = AutoModelForCausalLM.from_pretrained(
+        model_name,
+        dtype=torch.float16 if device == "cuda" else torch.float32,
+        low_cpu_mem_usage=True
+    )
+    # Move model to selected device (GPU/CPU)
+    model = model.to(device)
+elif LLM_BACKEND == "ollama":
+    print(f"Using {OLLAMA_MODEL} via Ollama at {OLLAMA_URL}")
+else:
+    raise ValueError(f"Unknown DOCUCHAT_LLM '{LLM_BACKEND}'. Use 'tinyllama' or 'ollama'.")
 
 # One generation at a time - the API serves requests on several threads
 _generate_lock = threading.Lock()
@@ -111,6 +130,9 @@ def run_model(system, user):
         {"role": "system", "content": system},
         {"role": "user", "content": user},
     ]
+    if LLM_BACKEND == "ollama":
+        return run_ollama(messages)
+
     prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
 
     # Tokenize input and move to correct device
@@ -130,6 +152,24 @@ def run_model(system, user):
     # by len(prompt) breaks, because decoding doesn't reproduce the prompt exactly.
     new_tokens = outputs[0][inputs["input_ids"].shape[1]:]
     return tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
+
+# Same job through Ollama's HTTP API (standard library only, no extra package)
+def run_ollama(messages):
+    body = json.dumps({
+        "model": OLLAMA_MODEL,
+        "messages": messages,
+        "stream": False,
+        "options": {"temperature": 0, "num_predict": 200},   # deterministic, short answers
+    }).encode("utf-8")
+    request = urllib.request.Request(OLLAMA_URL, data=body, headers={"Content-Type": "application/json"})
+    try:
+        with _generate_lock, urllib.request.urlopen(request, timeout=300) as resp:
+            return json.loads(resp.read())["message"]["content"].strip()
+    except urllib.error.HTTPError as e:
+        detail = e.read().decode("utf-8", "ignore")
+        return f"Ollama returned an error ({e.code}): {detail[:200]}. Is the model '{OLLAMA_MODEL}' pulled?"
+    except (urllib.error.URLError, TimeoutError) as e:
+        return f"I can't reach Ollama at {OLLAMA_URL} ({e}). Start Ollama, or set DOCUCHAT_LLM=tinyllama."
 
 # Retrieves relevant documents and generates an answer.
 # Returns (answer, chunks the answer was based on).
