@@ -1,0 +1,7 @@
+Networks allow computers to communicate.
+Key concepts:
+- LAN, WAN
+- IP Address
+- Protocols: TCP/IP, HTTP
+- Devices: Routers, Switches
+- Security: Firewalls, VPNs

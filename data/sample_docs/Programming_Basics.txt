@@ -1,0 +1,6 @@
+Programming involves writing instructions for a computer.
+Concepts:
+- Variables, Data Types
+- Conditionals & Loops
+- Functions
+- Object-Oriented Programming

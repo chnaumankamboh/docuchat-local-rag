@@ -1,0 +1,11 @@
+1:  os → file/folder handling
+2:  pickle → save/load Python data
+3:  SentenceTransformer → convert text into vectors
+4:  faiss → search those vectors efficiently
+5:  torch → deep learning backend
+6:  transformers → load AI language model + tokenizer
+7:  retrieve_docs → fetch relevant documents for context (RAG step)
+8:  streamlit → build web UI
+9:  uuid → generate unique IDs
+10: json → store/load structured data
+11: datetime → work with time and timestamps

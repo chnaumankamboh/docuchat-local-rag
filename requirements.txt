@@ -1,0 +1,18 @@
+# RAG pipeline (src/ingest.py, retrieve.py, generate.py)
+torch==2.12.1
+transformers==5.13.0
+sentence-transformers==5.6.0
+faiss-cpu==1.14.3
+numpy==2.2.6
+
+# Reading documents (txt / docx / pdf)
+python-docx==1.2.0
+pypdf==6.14.2
+
+# Streamlit chat app (src/app.py)
+streamlit==1.65.0
+
+# DocuChat API (rag_api.py + docuchat_ui.html)
+fastapi==0.139.0
+uvicorn[standard]==0.50.2
+python-multipart==0.0.32

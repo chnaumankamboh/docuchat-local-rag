@@ -1,0 +1,10 @@
+Computer Science is the study of computers and computational systems. 
+It includes programming, algorithms, data structures, and software engineering.
+
+Key areas:
+- Algorithms
+- Data Structures
+- Operating Systems
+- Databases
+- AI & Machine Learning
+- Networking

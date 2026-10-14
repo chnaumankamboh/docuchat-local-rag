@@ -1,0 +1,6 @@
+AI simulates human intelligence. Machine Learning is a subset:
+- Supervised Learning
+- Unsupervised Learning
+- Reinforcement Learning
+
+Applications: NLP, Computer Vision, Robotics

@@ -1,0 +1,7 @@
+Data structures organize data for efficient access.
+- Arrays
+- Linked Lists
+- Stacks
+- Queues
+- Trees
+- Graphs

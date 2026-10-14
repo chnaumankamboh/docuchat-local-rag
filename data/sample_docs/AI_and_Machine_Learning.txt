@@ -1,0 +1,8 @@
+Artificial Intelligence (AI) is the simulation of human intelligence in machines. 
+Machine Learning (ML) is a subset of AI where systems learn from data. Common ML types:
+
+- Supervised Learning: Models trained with labeled data.
+- Unsupervised Learning: Models find patterns without labels.
+- Reinforcement Learning: Models learn via rewards and penalties.
+
+AI is used in natural language processing, computer vision, robotics, and recommendation systems.

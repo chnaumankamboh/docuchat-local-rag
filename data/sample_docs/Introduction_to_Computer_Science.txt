@@ -1,0 +1,11 @@
+Computer Science is the study of computers and computational systems. 
+It involves both the theoretical foundations and practical techniques for designing, implementing, and analyzing algorithms and software. 
+Computer scientists work with programming languages, software engineering, data structures, and hardware systems.
+
+Key areas of computer science include:
+- Algorithms and Data Structures
+- Computer Architecture
+- Operating Systems
+- Databases
+- Artificial Intelligence
+- Networking and Security

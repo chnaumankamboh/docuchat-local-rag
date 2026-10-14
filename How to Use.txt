@@ -1,0 +1,23 @@
+First time only: install everything
+	paste = pip install -r requirements.txt
+
+Do Step 1 only once after adding new documents in the sample_docs Folder in Data
+(files uploaded through DocuChat are already indexed - no need to re-run it for those)
+
+Step 1: run ingest
+	paste = python src/ingest.py
+
+Do this when you want to run the app Server.
+
+Step 2: open the Terminal manually or with "Alt+F12"
+	paste = streamlit run src/app.py
+	press Enter after pasting
+
+	OR, for DocuChat (upload your own documents, answers with sources):
+	paste = uvicorn rag_api:app --port 8000
+	then open http://localhost:8000 in your browser
+
+Step 3:	To close app server go to terminal , click and press "Ctrl+C"
+
+Optional: to try it in the terminal without the app
+	paste = python src/generate.py
